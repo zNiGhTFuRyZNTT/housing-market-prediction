@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AlertCircle } from 'lucide-react';
 
 const HousingPricePredictor = () => {
   const [formData, setFormData] = useState({
@@ -24,6 +26,10 @@ const HousingPricePredictor = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+  };
+
+  const formatPrice = (priceString) => {
+    return parseFloat(priceString.replace(/[$,]/g, ''));
   };
 
   const handleSubmit = async (e) => {
@@ -58,6 +64,33 @@ const HousingPricePredictor = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getPriceComparisonData = () => {
+    if (!prediction) return [];
+    
+    return [
+      {
+        name: 'Linear Regression',
+        price: formatPrice(prediction.Linear_Regression_Price_Prediction),
+      },
+      {
+        name: 'Random Forest',
+        price: formatPrice(prediction.Random_Forest_Price_Prediction),
+      },
+    ];
+  };
+
+  const getClusterInfo = () => {
+    const clusterDescriptions = {
+      0: 'Budget-friendly properties',
+      1: 'Mid-range suburban homes',
+      2: 'Premium properties',
+      3: 'Luxury real estate',
+      4: 'Ultra-luxury properties'
+    };
+    
+    return clusterDescriptions[prediction?.K_Means_Cluster] || 'Unknown cluster';
   };
 
   const steps = [
@@ -186,24 +219,42 @@ const HousingPricePredictor = () => {
               <div className="mt-2 text-sm text-gray-500">Primary Estimate</div>
             </div>
             
-            <div className="space-y-2">
-              <div className="text-2xl font-light">
-                {prediction.Random_Forest_Price_Prediction}
-              </div>
-              <div className="text-sm text-gray-500">Random Forest Prediction</div>
+            {/* Price Comparison Chart */}
+            <div className="col-span-2 h-64 bg-gray-50 p-6">
+              <h3 className="text-lg font-light mb-4">Price Comparison</h3>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={getPriceComparisonData()}>
+                  <XAxis dataKey="name" />
+                  <YAxis 
+                    tickFormatter={(value) => `$${(value/1000000).toFixed(1)}M`}
+                  />
+                  <Tooltip 
+                    formatter={(value) => [`$${(value/1000000).toFixed(2)}M`, "Price"]}
+                  />
+                  <Bar dataKey="price" fill="#000000" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
 
-            <div className="space-y-2">
-              <div className="text-2xl font-light">
-                Cluster {prediction.K_Means_Cluster}
+            {/* Cluster Information */}
+            <div className="col-span-2 p-6 bg-gray-50">
+              <div className="flex items-start space-x-4">
+                <AlertCircle className="w-6 h-6 text-gray-400" />
+                <div>
+                  <h3 className="text-lg font-light">Property Cluster Analysis</h3>
+                  <p className="mt-2 text-gray-600">
+                    Cluster {prediction.K_Means_Cluster}: {getClusterInfo()}
+                  </p>
+                </div>
               </div>
-              <div className="text-sm text-gray-500">Property Group</div>
             </div>
 
-            <div className="col-span-2">
-              <div className="text-xl font-light">
-                Price Category: {prediction.KNN_Price_Category}
-              </div>
+            {/* Price Category */}
+            <div className="col-span-2 p-6 bg-gray-50">
+              <h3 className="text-lg font-light">Price Category</h3>
+              <p className="mt-2 text-gray-600">
+                This property falls into the <span className="font-medium">{prediction.KNN_Price_Category}</span> category
+              </p>
             </div>
           </div>
 
