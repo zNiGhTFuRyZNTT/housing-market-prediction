@@ -1,10 +1,10 @@
 import React from 'react';
-import FlightDelayPredictor from './FlightDelayPredictor';
+import HousingPricePredictor from './HousingPricePredictor';
 
 function App() {
   return (
     <div className="App">
-      <FlightDelayPredictor />
+      <HousingPricePredictor />
     </div>
   );
 }
